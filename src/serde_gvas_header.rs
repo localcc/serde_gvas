@@ -3,6 +3,7 @@ use serde::de::{
     self, DeserializeSeed, SeqAccess, Visitor
 };
 use crate::error::{Result, Error};
+
 use crate::{parse_num, deserialize_macro, unimplemented_deserialize};
 
 struct ArrayAccess<'a, 'de: 'a> {
@@ -49,15 +50,19 @@ pub fn from_bytes<'a, T>(s: &'a [u8]) -> Result<T> where
 }
 
 impl<'de> Deserializer<'de> {
-    parse_num!(parse_u16, u16, 2);
-    parse_num!(parse_u32, u32, 4);
-    parse_num!(parse_i32, i32, 4);
+    parse_num!(peek_u16, parse_u16, u16, 2);
+    parse_num!(peek_u32, parse_u32, u32, 4);
+    parse_num!(peek_i32, parse_i32, i32, 4);
 
     fn parse_string(&mut self) -> Result<String> {
         let len = self.parse_i32()?;
-        let res = String::from_utf8(self.input[self.reader_pos as usize .. (self.reader_pos + len as u32) as usize].try_into().map_err(|e| Error::make_syntax())?).map_err(|e| Error::make_syntax())?;
+        let res = String::from_utf8(self.input[self.reader_pos as usize .. (self.reader_pos + (len - 1) as u32) as usize].try_into().map_err(|_| Error::make_syntax())?).map_err(|_| Error::make_syntax())?;
         self.reader_pos += len as u32;
         Ok(res)
+    }
+    
+    pub fn parsed_length(self) -> u32 {
+        self.reader_pos
     }
 }
 

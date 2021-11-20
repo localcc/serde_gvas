@@ -27,7 +27,7 @@ impl serde::de::Error for Error {
     }
 }
 
-fn make_error(mut msg: String) -> Error {
+fn make_error(msg: String) -> Error {
     Error {
         code: ErrorCode::InvalidFile(msg.into_boxed_str())
     }
