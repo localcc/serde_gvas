@@ -7,7 +7,7 @@ use serde::de::{
 };
 use crate::error::{Result, Error};
 
-use crate::{deserialize_macro, unimplemented_deserialize};
+use crate::{unimplemented_deserialize};
 
 struct ArrayAccess<'a, 'de: 'a> {
     de: &'a mut Deserializer<'de>,

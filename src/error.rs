@@ -14,6 +14,12 @@ impl Error {
         }
     }
 
+    pub fn make_data(msg: String) -> Self {
+        Error {
+            code: ErrorCode::Data(msg.into_boxed_str())
+        }
+    }
+
     pub fn make_read(err: io::Error) -> Self {
         Error {
             code: ErrorCode::Io(err)
@@ -32,13 +38,19 @@ impl Error {
 pub enum ErrorCode {
     Io(io::Error),
     StringParse(FromUtf8Error),
+    Data(Box<str>),
     Other(Box<str>)
 }
 
 
 impl serde::de::Error for Error {
-
     fn custom<T>(msg: T) -> Self where T: std::fmt::Display {
+        Error::make_other(msg.to_string())
+    }
+}
+
+impl serde::ser::Error for Error {
+    fn custom<T>(msg: T)->Self where T: Display {
         Error::make_other(msg.to_string())
     }
 }
@@ -75,7 +87,8 @@ impl Display for ErrorCode {
         match *self {
             ErrorCode::Io(ref err) => Display::fmt(err, f),
             ErrorCode::StringParse(ref err) => Display::fmt(err, f),
-            ErrorCode::Other(ref msg) => f.write_str(msg)
+            ErrorCode::Other(ref msg) => f.write_str(msg),
+            ErrorCode::Data(ref msg) => f.write_str(msg)
         }
     }
 }

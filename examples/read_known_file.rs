@@ -1,6 +1,6 @@
 use std::{error::Error, fs::File, io::{Cursor, Read}, path::Path};
 use serde::Deserialize;
-use serde_gvas::{serde_gvas_header, types::{GvasHeader}};
+use serde_gvas::{header, types::{GvasHeader}};
 
 #[derive(Deserialize, Debug)]
 struct TestStruct {
@@ -31,7 +31,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut cursor = Cursor::new(buf);
 
-    let mut header_deserializer = serde_gvas_header::Deserializer::from_bytes(&mut cursor);
+    let mut header_deserializer = header::de::Deserializer::from_bytes(&mut cursor);
     let header: GvasHeader = GvasHeader::deserialize(&mut header_deserializer)?;
     println!("Header: {:?}", header);
 

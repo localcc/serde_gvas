@@ -34,6 +34,15 @@ macro_rules! unimplemented_deserialize {
 }
 
 #[macro_export]
+macro_rules! unimplemented_serialize {
+    ($method:ident,$type:ty) => {
+        fn $method(self, _: $type) -> Result<Self::Ok> {
+            unimplemented!()
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! parse_number_property {
     ($method:ident, $read_method:ident, $endianness:ty, $num:ty, $size:literal) => {
         fn $method(&mut self) -> Result<$num> {

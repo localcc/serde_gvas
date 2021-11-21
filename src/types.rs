@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct FEngineVersion {
     pub major: u16,
     pub minor: u16,
@@ -11,7 +11,7 @@ pub struct FEngineVersion {
     pub branch: String
 }
 
-#[derive(Deserialize, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, PartialEq, Eq)]
 pub struct FGuid {
     pub a: u32,
     pub b: u32,
@@ -31,13 +31,13 @@ impl Debug for FGuid {
     }
 }
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct FCustomVersion {
     pub key: FGuid,
     pub version: i32
 }
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct GvasHeader {
     pub file_type_tag: i32,
     pub save_game_file_version: i32,

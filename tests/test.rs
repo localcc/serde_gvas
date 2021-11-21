@@ -1,7 +1,7 @@
 use std::io::Cursor;
 
 use serde::Deserialize;
-use serde_gvas::{serde_gvas_header};
+use serde_gvas::header::{self, de, ser};
 use serde_gvas::types::{FEngineVersion, GvasHeader};
 
 // Test file bytes
@@ -241,14 +241,14 @@ fn header_check(parse_header: &GvasHeader) {
 #[test]
 fn read_header() {
     let mut cursor = Cursor::new(TEST_FILE.to_vec());
-    let parse_header: GvasHeader = serde_gvas_header::from_bytes(&mut cursor).expect("Failed to parse file!");
+    let parse_header: GvasHeader = header::de::from_bytes(&mut cursor).expect("Failed to parse file!");
     header_check(&parse_header);
 }
 
 #[test]
 fn read_data() {
     let mut cursor = Cursor::new(TEST_FILE.to_vec());
-    let mut header_deserializer = serde_gvas_header::Deserializer::from_bytes(&mut cursor);
+    let mut header_deserializer = header::de::Deserializer::from_bytes(&mut cursor);
     let header: GvasHeader = GvasHeader::deserialize(&mut header_deserializer).expect("Failed to parse file header!");
 
     header_check(&header);
@@ -269,4 +269,13 @@ fn read_data() {
     assert_eq!(parse_file.str_property, expected_file.str_property);
     assert_eq!(parse_file.test_struct, expected_file.test_struct);
     assert_eq!(parse_file.test_arr, expected_file.test_arr);
+}
+
+#[test]
+fn write_header() {
+	let mut cursor = Cursor::new(TEST_FILE.to_vec());
+	let parsed: GvasHeader = header::de::from_bytes(&mut cursor).expect("Failed to deserialize header!");
+
+	let serialized = header::ser::to_vec(&parsed).expect("Failed to serialize header!");
+	assert_eq!(TEST_FILE[..cursor.position() as usize].to_vec(), serialized);
 }
