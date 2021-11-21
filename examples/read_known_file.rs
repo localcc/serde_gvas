@@ -1,6 +1,11 @@
-use std::{error::Error, fs::File, io::Read, path::Path};
+use std::{error::Error, fs::File, io::{Cursor, Read}, path::Path};
 use serde::Deserialize;
 use serde_gvas::{serde_gvas_header, types::{GvasHeader}};
+
+#[derive(Deserialize, Debug)]
+struct TestStruct {
+    test: i32
+}
 
 #[derive(Deserialize, Debug)]
 struct UnrealFile {
@@ -15,7 +20,7 @@ struct UnrealFile {
     f_property: f32,
     d_property: f64,
     str_property: String,
-    test_struct: u64
+    test_struct: TestStruct
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -24,11 +29,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut buf = Vec::new();
     file.read_to_end(&mut buf)?;
 
-    let mut header_deserializer = serde_gvas_header::Deserializer::from_bytes(&buf);
+    let mut cursor = Cursor::new(buf);
+
+    let mut header_deserializer = serde_gvas_header::Deserializer::from_bytes(&mut cursor);
     let header: GvasHeader = GvasHeader::deserialize(&mut header_deserializer)?;
     println!("Header: {:?}", header);
 
-    let file: UnrealFile = serde_gvas::from_bytes(&buf, header_deserializer.parsed_length())?;
+    let file: UnrealFile = serde_gvas::from_bytes(&mut cursor)?;
     println!("File: {:?}", file);
 
     Ok(())

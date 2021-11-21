@@ -1,5 +1,5 @@
 pub type Result<T> = std::result::Result<T, Error>;
-use std::fmt::Display;
+use std::{fmt::Display, io, str::Utf8Error, string::FromUtf8Error};
 
 
 #[derive(Debug)]
@@ -8,34 +8,59 @@ pub struct Error {
 }
 
 impl Error {
-    pub fn make_syntax() -> Self {
-        make_error(String::from("Invalid Syntax"))
+    pub fn make_other(msg: String) -> Self {
+        Error {
+            code: ErrorCode::Other(msg.into_boxed_str())
+        }
+    }
+
+    pub fn make_read(err: io::Error) -> Self {
+        Error {
+            code: ErrorCode::Io(err)
+        }
+    }
+
+    pub fn make_string(err: FromUtf8Error) -> Self {
+        Error {
+            code: ErrorCode::StringParse(err)
+        }
     }
 }
 
 
 #[derive(Debug)]
 pub enum ErrorCode {
-    InvalidFile(Box<str>)
+    Io(io::Error),
+    StringParse(FromUtf8Error),
+    Other(Box<str>)
 }
 
 
 impl serde::de::Error for Error {
 
     fn custom<T>(msg: T) -> Self where T: std::fmt::Display {
-        make_error(msg.to_string())
+        Error::make_other(msg.to_string())
     }
 }
 
-fn make_error(msg: String) -> Error {
-    Error {
-        code: ErrorCode::InvalidFile(msg.into_boxed_str())
+impl From<std::io::Error> for Error {
+    fn from(e: std::io::Error) -> Self {
+        Error::make_read(e)
+    }
+}
+
+impl From<FromUtf8Error> for Error {
+    fn from(e: FromUtf8Error) -> Self {
+        Error::make_string(e)
     }
 }
 
 impl serde::de::StdError for Error {
     fn source(&self) -> Option<&(dyn serde::de::StdError + 'static)> {
-        None
+        match self.code {
+            ErrorCode::Io(ref err) => Some(err),
+            _ => None
+        }
     }
 }
 
@@ -47,7 +72,10 @@ impl Display for Error {
 
 impl Display for ErrorCode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let ErrorCode::InvalidFile(msg) = self;
-        f.write_str(msg)
+        match *self {
+            ErrorCode::Io(ref err) => Display::fmt(err, f),
+            ErrorCode::StringParse(ref err) => Display::fmt(err, f),
+            ErrorCode::Other(ref msg) => f.write_str(msg)
+        }
     }
 }
